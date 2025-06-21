@@ -1,7 +1,6 @@
 // frontend/script.js
 let token = '';
-const API_BASE = 'https://fileshare-o1fc.onrender.com'; 
-
+const API_BASE = 'https://fileshare-o1fc.onrender.com'; // No trailing slash
 
 async function register() {
     console.log("Register button clicked");
@@ -9,15 +8,22 @@ async function register() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    const res = await fetch(`${API_BASE}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
 
-    const data = await res.json();
-    document.getElementById('auth-status').textContent = data.message || 'Registered!';
-    console.log("Register response:", data);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Registration failed');
+
+        document.getElementById('auth-status').textContent = data.message || 'Registered!';
+        console.log("Register response:", data);
+    } catch (err) {
+        console.error("Register failed:", err);
+        document.getElementById('auth-status').textContent = err.message;
+    }
 }
 
 async function login() {
@@ -26,23 +32,28 @@ async function login() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
 
-    const data = await res.json();
-    console.log("Login response:", data);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Login failed');
 
-    if (data.token) {
-        token = data.token;
-        document.getElementById('auth-status').textContent = 'Logged in!';
-        document.getElementById('auth-section').style.display = 'none';
-        document.getElementById('upload-section').style.display = 'block';
-        loadFiles();
-    } else {
-        document.getElementById('auth-status').textContent = data.message || 'Login failed';
+        if (data.token) {
+            token = data.token;
+            document.getElementById('auth-status').textContent = 'Logged in!';
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('upload-section').style.display = 'block';
+            loadFiles();
+        } else {
+            document.getElementById('auth-status').textContent = data.message || 'Login failed';
+        }
+    } catch (err) {
+        console.error("Login failed:", err);
+        document.getElementById('auth-status').textContent = err.message;
     }
 }
 
@@ -75,31 +86,42 @@ document.getElementById('uploadForm').addEventListener('submit', async function 
 });
 
 async function loadFiles() {
-    const res = await fetch(`${API_BASE}/api/files`);
-    const files = await res.json();
+    try {
+        const res = await fetch(`${API_BASE}/api/files`);
+        const files = await res.json();
 
-    const list = document.getElementById('fileList');
-    list.innerHTML = '';
+        const list = document.getElementById('fileList');
+        list.innerHTML = '';
 
-    files.forEach(file => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-            <a href="${file.path}" target="_blank">${file.originalName}</a>
-            <button onclick="deleteFile('${file._id}')">Delete</button>
-        `;
-        list.appendChild(li);
-    });
+        files.forEach(file => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <a href="${file.path}" target="_blank">${file.originalName}</a>
+                <button onclick="deleteFile('${file._id}')">Delete</button>
+            `;
+            list.appendChild(li);
+        });
+    } catch (err) {
+        console.error("Error loading files:", err);
+    }
 }
 
 async function deleteFile(id) {
     const confirmed = confirm("Are you sure you want to delete this file?");
     if (!confirmed) return;
 
-    const res = await fetch(`${API_BASE}/api/files/${id}`, {
-        method: 'DELETE'
-    });
+    try {
+        const res = await fetch(`${API_BASE}/api/files/${id}`, {
+            method: 'DELETE'
+        });
 
-    const data = await res.json();
-    alert(data.message);
-    loadFiles();
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Delete failed');
+
+        alert(data.message);
+        loadFiles();
+    } catch (err) {
+        alert("Delete failed: " + err.message);
+        console.error("Delete failed:", err);
+    }
 }
