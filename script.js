@@ -6,7 +6,7 @@ async function register() {
     const password = document.getElementById('password').value;
 
     try {
-        const res = await fetch(${API_BASE}/api/auth/register, {
+        const res = await fetch(`${API_BASE}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -25,7 +25,7 @@ async function login() {
     const password = document.getElementById('password').value;
 
     try {
-        const res = await fetch(${API_BASE}/api/auth/login, {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -54,15 +54,15 @@ document.getElementById('uploadForm').addEventListener('submit', async function 
     formData.append('file', file);
 
     try {
-        const res = await fetch(${API_BASE}/api/files/upload, {
+        const res = await fetch(`${API_BASE}/api/files/upload`, {
             method: 'POST',
-            headers: { 'Authorization': Bearer ${token} },
+            headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
-        document.getElementById('result').textContent = Uploaded: ${data.fileName};
+        document.getElementById('result').textContent = `Uploaded: ${data.fileName}`;
         loadFiles();
     } catch (err) {
         document.getElementById('result').textContent = 'Upload failed: ' + err.message;
@@ -71,9 +71,9 @@ document.getElementById('uploadForm').addEventListener('submit', async function 
 
 async function loadFiles() {
     try {
-        const res = await fetch(${API_BASE}/api/files, {
+        const res = await fetch(`${API_BASE}/api/files`, {
             method: 'GET',
-            headers: { 'Authorization': Bearer ${token} }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
         const files = await res.json();
@@ -97,9 +97,9 @@ async function deleteFile(id) {
     if (!confirm("Are you sure you want to delete this file?")) return;
 
     try {
-        const res = await fetch(${API_BASE}/api/files/${id}, {
+        const res = await fetch(`${API_BASE}/api/files/${id}`, {
             method: 'DELETE',
-            headers: { 'Authorization': Bearer ${token} }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
         const data = await res.json();
