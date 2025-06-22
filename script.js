@@ -83,7 +83,7 @@ async function loadFiles() {
         files.forEach(file => {
             const li = document.createElement('li');
             li.innerHTML = `
-                <a href="${API_BASE}/api/files/download/${file.fileId}" target="_blank">${file.fileName}</a>
+                <button onclick="downloadFile('${file.fileId}', '${file.fileName}')">Download</button>
                 <button onclick="deleteFile('${file.fileId}')">Delete</button>
             `;
             list.appendChild(li);
@@ -110,3 +110,33 @@ async function deleteFile(id) {
         alert("Delete failed: " + err.message);
     }
 }
+
+async function downloadFile(fileId, fileName) {
+    try {
+        const res = await fetch(`${API_BASE}/api/files/download/${fileId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.message || 'Download failed');
+        }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (err) {
+        alert("Download failed: " + err.message);
+        console.error("Download error:", err);
+    }
+}
+
