@@ -1,4 +1,3 @@
-// frontend/script.js
 let token = '';
 const API_BASE = 'https://fileshare-o1fc.onrender.com'; // ✅ No trailing slash
 
@@ -41,7 +40,7 @@ async function login() {
             document.getElementById('auth-status').textContent = 'Logged in!';
             document.getElementById('auth-section').style.display = 'none';
             document.getElementById('upload-section').style.display = 'block';
-            loadFiles();
+            loadFiles(); // Load user files after login
         }
     } catch (err) {
         document.getElementById('auth-status').textContent = err.message;
@@ -59,7 +58,9 @@ document.getElementById('uploadForm').addEventListener('submit', async function 
     try {
         const res = await fetch(${API_BASE}/api/files/upload, {
             method: 'POST',
-            headers: { 'Authorization': token },
+            headers: {
+                'Authorization': Bearer ${token} // ✅ Bearer prefix required
+            },
             body: formData
         });
 
@@ -67,7 +68,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function 
         if (!res.ok) throw new Error(data.message);
 
         document.getElementById('result').textContent = Uploaded: ${data.fileName};
-        loadFiles();
+        loadFiles(); // Refresh file list
     } catch (err) {
         document.getElementById('result').textContent = 'Upload failed: ' + err.message;
     }
@@ -77,7 +78,9 @@ async function loadFiles() {
     try {
         const res = await fetch(${API_BASE}/api/files, {
             method: 'GET',
-            headers: { 'Authorization': token }
+            headers: {
+                'Authorization': Bearer ${token} // ✅ Must use Bearer here too
+            }
         });
 
         const files = await res.json();
@@ -87,8 +90,8 @@ async function loadFiles() {
         files.forEach(file => {
             const li = document.createElement('li');
             li.innerHTML = `
-                <a href="${API_BASE}/api/files/download/${file._id}" target="_blank">${file.originalName}</a>
-                <button onclick="deleteFile('${file._id}')">Delete</button>
+                <a href="${API_BASE}/api/files/download/${file.fileId}" target="_blank">${file.fileName}</a>
+                <button onclick="deleteFile('${file.fileId}')">Delete</button>
             `;
             list.appendChild(li);
         });
@@ -103,14 +106,16 @@ async function deleteFile(id) {
     try {
         const res = await fetch(${API_BASE}/api/files/${id}, {
             method: 'DELETE',
-            headers: { 'Authorization': token }
+            headers: {
+                'Authorization': Bearer ${token} // ✅ Again, Bearer here
+            }
         });
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
 
         alert(data.message);
-        loadFiles();
+        loadFiles(); // Refresh list
     } catch (err) {
         alert("Delete failed: " + err.message);
     }
